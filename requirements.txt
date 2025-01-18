@@ -1,0 +1,6 @@
+torch
+transformers
+evaluate
+peft
+numpy
+pandas
