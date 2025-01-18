@@ -8,12 +8,13 @@
 # Check out: https://github.com/huggingface/peft
 
 import pandas as pd
+import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, \
     DataCollatorWithPadding
 import numpy as np
 from evaluate import evaluator
-from peft import LoraConfig, TaskType, get_peft_model
+from peft import LoraConfig, AutoPeftModelForSequenceClassification, TaskType, get_peft_model
 
 def compute_metrics(eval_pred):
     predictions, labels = eval_pred
@@ -114,7 +115,43 @@ if __name__ == '__main__':
     trainer.train()
     eval_results = trainer.evaluate()
 
-    # Test model on test dataset after low ranked adaptation using training dataset.
+    # Load saved PEFT model
+    peft_model = AutoPeftModelForSequenceClassification.from_pretrained("./data/checkpoint-500",
+                                        is_trainable=False,
+                                        num_labels=6,
+                                        id2label={
+                                            0: "sadness",
+                                            1: "joy",
+                                            2: "love",
+                                            3: "anger",
+                                            4: "fear",
+                                            5: "surprise",
+                                        },
+                                        label2id={
+                                            "sadness": 0,
+                                            "joy": 1,
+                                            "love": 2,
+                                            "anger": 3,
+                                            "fear": 4,
+                                            "surprise": 5,
+                                        }
+                                    )
+    peft_model.config.pad_token_id = model.config.eos_token_id
+
+    print(peft_model)
+
+    # Wrap PEFT model with trainer for running evaluation. We will not actually run training again.
+    trainer = Trainer(
+        model=peft_model,
+        args=training_args,
+        train_dataset=tokenized_dataset["train"],
+        eval_dataset=tokenized_dataset["test"],
+        tokenizer=tokenizer,
+        data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
+        compute_metrics=compute_metrics,
+    )
+    eval_results = trainer.evaluate()
+
     print("Evaluation result for model on dataset after low ranked adaptation:")
     print(eval_results)
 

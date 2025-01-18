@@ -44,3 +44,9 @@ Checkout: https://stackoverflow.com/questions/41427500/creating-a-virtualenv-wit
 ## Run script
 
 The script is included as main method. You can run the script using pycharm or via command line.
+
+## Current Limitation
+
+Currently not using [Quantization](https://huggingface.co/docs/peft/developer_guides/quantization), since 
+Quantization library (bitsandbytes) currently only has support for CUDA and lacks support for Metal 
+(GPU available for Mac) 
