@@ -166,7 +166,8 @@ if __name__ == '__main__':
         "predictions": np.argmax(results.predictions, axis=1),
         "labels": [label for label in items_for_manual_review['label']],
     })
-    pd.set_option("display.max_colwidth", None)
+    df['text'] = df['text'].str.wrap(40)
+    df.assign(text=df['text'].str.split(' ')).explode('text')
     print("Sampled predictions for manual review:")
     print(df)
 
